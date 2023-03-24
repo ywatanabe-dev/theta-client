@@ -553,6 +553,28 @@ object ThetaApi {
     }
 
     /**
+     * Call [camera._setBluetoothDevice](https://github.com/ricohapi/theta-api-specs/blob/main/theta-web-api-v2.1/commands/camera._set_bluetooth_device.md)
+     * @param endpoint Endpoint of Theta web API
+     * @param params set bluetooth device parameters
+     * @return response of _setBluetoothDevice command
+     * @see SetBluetoothDeviceParams
+     * @see SetBluetoothDeviceResponse
+     * @exception java.net.ConnectException can not connect to target endpoint
+     * @exception io.ktor.client.network.sockets.ConnectTimeoutException timeout to connect target endpoint
+     * @exception io.ktor.client.plugins.RedirectResponseException target response 3xx status
+     * @exception io.ktor.client.plugins.ClientRequestException target response 4xx status
+     * @exception io.ktor.client.plugins.ServerResponseException target response 5xx status
+     */
+    @Throws(Throwable::class)
+    suspend fun callSetBluetoothDeviceCommand(
+        endpoint: String,
+        params: SetBluetoothDeviceParams,
+    ): SetBluetoothDeviceResponse {
+        val request = SetBluetoothDeviceRequest(parameters = params)
+        return postCommandApi(endpoint, request).body()
+    }
+
+    /**
      * Post request {body} to {endpoint} APIs then return its response
      */
     private suspend fun postCommandApi(

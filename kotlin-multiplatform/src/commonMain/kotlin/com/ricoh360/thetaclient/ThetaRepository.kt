@@ -3407,6 +3407,35 @@ class ThetaRepository internal constructor(val endpoint: String, config: Config?
             }
         }
     }
+
+    /**
+     * Registers identification information (UUID) of a BLE device (Smartphone application) connected to the camera to the camera.
+     * UUID can be set while the wireless LAN function of the camera is placed in the direct mode.
+     *
+     * @param uuid UUID of the BLE device to set.
+     * @return Device name
+     * @exception ThetaWebApiException If an error occurs in THETA.
+     * @exception NotConnectedException
+     */
+    @Throws(Throwable::class)
+    suspend fun setBluetoothDevice(uuid: String): String {
+        try {
+            val params = SetBluetoothDeviceParams(uuid)
+            val setBluetoothDeviceResponse = ThetaApi.callSetBluetoothDeviceCommand(endpoint, params)
+            setBluetoothDeviceResponse.error?.let {
+                throw ThetaWebApiException(it.message)
+            }
+            return setBluetoothDeviceResponse.results!!.deviceName
+        } catch (e: JsonConvertException) {
+            throw ThetaWebApiException(e.message ?: e.toString())
+        } catch (e: ResponseException) {
+            throw ThetaWebApiException.create(e)
+        } catch (e: ThetaWebApiException) {
+            throw e
+        } catch (e: Exception) {
+            throw NotConnectedException(e.message ?: e.toString())
+        }
+    }
 }
 
 /**
