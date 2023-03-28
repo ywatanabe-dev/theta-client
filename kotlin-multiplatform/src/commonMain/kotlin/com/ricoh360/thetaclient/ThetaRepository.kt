@@ -367,7 +367,8 @@ class ThetaRepository internal constructor(val endpoint: String, config: Config?
      * If [startPosition] is larger than the position of the last file, an empty list is returned.
      * @param[entryCount] Desired number of entries to return.
      * If [entryCount] is more than the number of remaining files, just return entries of actual remaining files.
-     * @return A list of file information.
+     * @return A list of file information and number of totalEntries.
+     * see https://github.com/ricohapi/theta-api-specs/blob/main/theta-web-api-v2.1/commands/camera.list_files.md.
      * @exception ThetaWebApiException If an error occurs in THETA.
      * @exception NotConnectedException
      */

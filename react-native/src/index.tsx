@@ -824,7 +824,7 @@ export function getThetaState(): Promise<ThetaState> {
  * @param {number} entryCount Desired number of entries to return.  If
  *   entryCount is more than the number of remaining files, just
  *   return entries of actual remaining files.
- * @return promise of A list of file information and totalEntries.
+ * @return promise of A list of file information and number of totalEntries.
  *   see https://github.com/ricohapi/theta-api-specs/blob/main/theta-web-api-v2.1/commands/camera.list_files.md.
  */
 export async function listFiles(
