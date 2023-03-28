@@ -1507,7 +1507,7 @@ RCT_REMAP_METHOD(getThetaState,
 }
 
 /**
- * listFiles  -  retrieve File list from THETA via repository
+ * listFiles  -  retrieve File list and totalEntrie from THETA via repository
  * @param fileType file type to retrieve
  * @param startPosition start position to retrieve
  * @param entryCount count to retrieve
@@ -1524,14 +1524,14 @@ RCT_REMAP_METHOD(listFiles,
   [_theta listFilesFileType:[FileTypeEnum.toTheta objectForKey:fileType]
               startPosition:startPosition
                  entryCount:entryCount
-          completionHandler:^(NSArray<THETACThetaRepositoryFileInfo *> *items,
+          completionHandler:^(THETACKotlinPair<NSArray<THETACThetaRepositoryFileInfo *> *, THETACInt *> *items,
                               NSError *error) {
       if (error) {
         reject(@"error", [error localizedDescription], error);
       } else if (items) {
         NSMutableArray *ary = [[NSMutableArray alloc] init];
-        for (int i = 0; i < items.count; i++) {
-          THETACThetaRepositoryFileInfo *finfo = items[i];
+        for (int i = 0; i < items.first.count; i++) {
+          THETACThetaRepositoryFileInfo *finfo = items.first[i];
           [ary addObject: @{
               @"name":finfo.name,
                 @"size":@(finfo.size),
@@ -1540,7 +1540,8 @@ RCT_REMAP_METHOD(listFiles,
                 @"fileUrl":finfo.fileUrl
                 }];
         }
-        resolve(ary);
+          resolve(@{@"fileList":ary,
+                @"totalEntries": @([items.second intValue])});
       } else {
         reject(@"error", @"no items", nil);
       }

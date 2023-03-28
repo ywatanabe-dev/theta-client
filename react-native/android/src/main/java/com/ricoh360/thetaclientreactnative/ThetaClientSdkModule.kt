@@ -166,7 +166,7 @@ class ThetaClientReactNativeModule(
   }
 
   /**
-   * listFiles  -  retrieve File list from THETA via repository
+   * listFiles  -  retrieve File list and totalEntries from THETA via repository
    * @param fileType file type to retrieve
    * @param startPosition start position to retrieve
    * @param entryCount count to retrieve
@@ -176,22 +176,25 @@ class ThetaClientReactNativeModule(
   fun listFiles(fileType: String, startPosition: Int, entryCount: Int, promise: Promise) {
     launch {
       try {
-        val response = theta.listFiles(
+        val (files, totalEntries) = theta.listFiles(
           ThetaRepository.FileTypeEnum.valueOf(fileType),
           startPosition,
           entryCount
         )
-        val resultlist = Arguments.createArray()
-        response.forEach {
+        val fileList = Arguments.createArray()
+        files.forEach {
           val result = Arguments.createMap()
           result.putString("name", it.name)
           result.putDouble("size", it.size.toDouble())
           result.putString("dateTime", it.dateTime)
           result.putString("thumbnailUrl", it.thumbnailUrl)
           result.putString("fileUrl", it.fileUrl)
-          resultlist.pushMap(result)
+          fileList.pushMap(result)
         }
-        promise.resolve(resultlist)
+        val resultMap = Arguments.createMap()
+        resultMap.putArray("fileList", fileList)
+        resultMap.putInt("totalEntries", totalEntries)
+        promise.resolve(resultMap)
       } catch (t: Throwable) {
         promise.reject(t)
       }

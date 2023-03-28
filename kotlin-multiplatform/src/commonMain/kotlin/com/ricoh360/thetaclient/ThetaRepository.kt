@@ -372,7 +372,7 @@ class ThetaRepository internal constructor(val endpoint: String, config: Config?
      * @exception NotConnectedException
      */
     @Throws(Throwable::class)
-    suspend fun listFiles(fileType: FileTypeEnum, startPosition: Int = 0, entryCount: Int): List<FileInfo> {
+    suspend fun listFiles(fileType: FileTypeEnum, startPosition: Int = 0, entryCount: Int): Pair<List<FileInfo>, Int> {
         try {
             val params = ListFilesParams(
                 fileType = fileType.value,
@@ -387,7 +387,7 @@ class ThetaRepository internal constructor(val endpoint: String, config: Config?
             listFilesResponse.results!!.entries.forEach {
                 fileList.add(FileInfo(it))
             }
-            return fileList
+            return Pair(fileList, listFilesResponse.results!!.totalEntries)
         } catch (e: JsonConvertException) {
             throw ThetaWebApiException(e.message ?: e.toString())
         } catch (e: ResponseException) {
