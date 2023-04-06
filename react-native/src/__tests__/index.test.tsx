@@ -1,57 +1,5 @@
 import { NativeModules } from 'react-native';
-import {
-  CameraErrorEnum,
-  CaptureStatusEnum,
-  ChargingStateEnum,
-  getThetaInfo,
-  initialize,
-  ShootingFunctionEnum,
-  Options,
-  getThetaState,
-  listFiles,
-  FileTypeEnum,
-  deleteFiles,
-  deleteAllFiles,
-  deleteAllImageFiles,
-  deleteAllVideoFiles,
-  getOptions,
-  setOptions,
-  OptionNameEnum,
-  ApertureEnum,
-  CaptureModeEnum,
-  getLivePreview,
-  stopLivePreview,
-  getPhotoCaptureBuilder,
-  PhotoCaptureBuilder,
-  ExposureCompensationEnum,
-  ExposureDelayEnum,
-  ExposureProgramEnum,
-  FilterEnum,
-  PhotoFileFormatEnum,
-  GpsTagRecordingEnum,
-  IsoEnum,
-  IsoAutoHighLimitEnum,
-  WhiteBalanceEnum,
-  PhotoCapture,
-  getVideoCaptureBuilder,
-  VideoCapture,
-  VideoCaptureBuilder,
-  VideoFileFormatEnum,
-  MaxRecordableTimeEnum,
-  finishWlan,
-  getMetadata,
-  MetaInfo,
-  reset,
-  stopSelfTimer,
-  convertVideoFormats,
-  cancelVideoConvert,
-  setBluetoothDevice,
-  listAccessPoints,
-  AuthModeEnum,
-  setAccessPointDynamically,
-  setAccessPointStatically,
-  deleteAccessPoint,
-} from '..';
+import * as ThetaClient from '..';
 
 jest.mock('react-native', () => {
   return {
@@ -64,269 +12,213 @@ jest.mock('react-native', () => {
   };
 });
 
-const thetaClient = NativeModules.ThetaClientReactNative;
+const thetaClientNative = NativeModules.ThetaClientReactNative;
 
 test('Call initialize normal', async () => {
   const endpoint = 'http://192.168.1.1:80';
-  thetaClient.initialize = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      return true;
-    })
-  );
+  thetaClientNative.initialize = jest.fn().mockResolvedValue(true);
 
-  const res = await initialize(endpoint);
-
-  expect(thetaClient.initialize).toHaveBeenCalledWith(endpoint);
+  const res = await ThetaClient.initialize(endpoint);
+  expect(thetaClientNative.initialize).toHaveBeenCalledWith(endpoint);
   expect(res).toBe(true);
 });
 
 test('Exception for call initialize', async () => {
   const endpoint = 'http://192.168.1.1:80';
-  thetaClient.initialize = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      throw 'error';
-    })
-  );
+  thetaClientNative.initialize = jest.fn(async () => {
+    throw 'error';
+  });
 
   try {
-    await initialize(endpoint);
+    await ThetaClient.initialize(endpoint);
     throw new Error('failed');
   } catch (error) {
     expect(error).toBe('error');
   }
-  expect(thetaClient.initialize).toHaveBeenCalledWith(endpoint);
+  expect(thetaClientNative.initialize).toHaveBeenCalledWith(endpoint);
 });
 
 it.todo('write getThetaInfo test for THETA X, V, SC, S.');
 
 test('Call getThetaInfo normal for THETA Z1', async () => {
-  const manufacturer = 'RICOH';
-  const model = 'RICOH THETA Z1';
-  const serialNumber = '10100001';
-  const wlanMacAddress = '00:45:78:bc:45:67';
-  const bluetoothMacAddress = '00:45:de:78:3e:33';
-  const firmwareVersion = '2.20.3';
-  const supportUrl = 'https://theta360.com/en/support/';
-  const hasGps = false;
-  const hasGyro = true;
-  const uptime = 67;
-  const api = [
-    '/osc/info',
-    '/osc/state',
-    '/osc/checkForUpdates',
-    '/osc/commands/execute',
-    '/osc/commands/status',
-  ];
-  const endpoints = {
-    httpPort: 80,
-    httpUpdatesPort: 80,
+  const info = {
+    manufacturer: 'RICOH',
+    model: 'RICOH THETA Z1',
+    serialNumber: '10100001',
+    wlanMacAddress: '00:45:78:bc:45:67',
+    bluetoothMacAddress: '00:45:de:78:3e:33',
+    firmwareVersion: '2.20.3',
+    supportUrl: 'https://theta360.com/en/support/',
+    hasGps: false,
+    hasGyro: true,
+    uptime: 67,
+    api: [
+      '/osc/info',
+      '/osc/state',
+      '/osc/checkForUpdates',
+      '/osc/commands/execute',
+      '/osc/commands/status',
+    ],
+    endpoints: {
+      httpPort: 80,
+      httpUpdatesPort: 80,
+    },
+    apiLevel: [1, 2],
   };
-  const apiLevel = [1, 2];
-  thetaClient.getThetaInfo = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      return {
-        manufacturer,
-        model,
-        serialNumber,
-        wlanMacAddress,
-        bluetoothMacAddress,
-        firmwareVersion,
-        supportUrl,
-        hasGps,
-        hasGyro,
-        uptime,
-        api,
-        endpoints,
-        apiLevel,
-      };
-    })
-  );
+  thetaClientNative.getThetaInfo = jest.fn().mockResolvedValue(info);
 
-  const res = await getThetaInfo();
-  expect(thetaClient.getThetaInfo).toBeCalled();
-  expect(res.manufacturer).toBe(manufacturer);
-  expect(res.model).toBe(model);
-  expect(res.serialNumber).toBe(serialNumber);
-  expect(res.wlanMacAddress).toBe(wlanMacAddress);
-  expect(res.bluetoothMacAddress).toBe(bluetoothMacAddress);
-  expect(res.firmwareVersion).toBe(firmwareVersion);
-  expect(res.supportUrl).toBe(supportUrl);
-  expect(res.hasGps).toBe(hasGps);
-  expect(res.hasGyro).toBe(hasGyro);
-  expect(res.uptime).toBe(uptime);
-  expect(res.api).toStrictEqual(api);
-  expect(res.endpoints).toStrictEqual(endpoints);
-  expect(res.apiLevel).toStrictEqual(apiLevel);
+  const res = await ThetaClient.getThetaInfo();
+  expect(thetaClientNative.getThetaInfo).toBeCalled();
+  expect(res.manufacturer).toBe(info.manufacturer);
+  expect(res.model).toBe(info.model);
+  expect(res.serialNumber).toBe(info.serialNumber);
+  expect(res.wlanMacAddress).toBe(info.wlanMacAddress);
+  expect(res.bluetoothMacAddress).toBe(info.bluetoothMacAddress);
+  expect(res.firmwareVersion).toBe(info.firmwareVersion);
+  expect(res.supportUrl).toBe(info.supportUrl);
+  expect(res.hasGps).toBe(info.hasGps);
+  expect(res.hasGyro).toBe(info.hasGyro);
+  expect(res.uptime).toBe(info.uptime);
+  expect(res.api).toStrictEqual(info.api);
+  expect(res.endpoints).toStrictEqual(info.endpoints);
+  expect(res.apiLevel).toStrictEqual(info.apiLevel);
 });
 
 test('Exception for call getThetaInfo', async () => {
-  thetaClient.getThetaInfo = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      throw 'error';
-    })
-  );
+  thetaClientNative.getThetaInfo = jest.fn(async () => {
+    throw 'error';
+  });
 
   try {
-    await getThetaInfo();
+    await ThetaClient.getThetaInfo();
     throw new Error('failed');
   } catch (error) {
     expect(error).toBe('error');
   }
-  expect(thetaClient.getThetaInfo).toBeCalled();
+  expect(thetaClientNative.getThetaInfo).toBeCalled();
 });
 
 it.todo('write getThetaState test for THETA X, V, SC, S.');
 
 test('Call getThetaState normal for THETA Z1', async () => {
-  const fingerprint = 'FIG_0001';
-  const batteryLevel = 0.81;
-  const storageUri =
-    'http://192.168.1.1/files/150100525831424d42075b53ce68c300/';
-  const storageID = null;
-  const captureStatus = CaptureStatusEnum.IDLE;
-  const recordedTime = 0;
-  const recordableTime = 0;
-  const capturedPictures = 0;
-  const compositeShootingElapsedTime = 0;
-  const latestFileUrl =
-    'http://192.168.1.1/files/150100525831424d42075b53ce68c300/100RICOH/R0010010.JPG';
-  const chargingState = ChargingStateEnum.NOT_CHARGING;
-  const apiVersion = 2;
-  const isPluginRunning = false;
-  const isPluginWebServer = true;
-  const _function = ShootingFunctionEnum.SELF_TIMER;
-  const isMySettingChanged = false;
-  const currentMicrophone = null;
-  const isSdCard = false;
-  const cameraError = [CameraErrorEnum.COMPASS_CALIBRATION];
-  const isBatteryInsert = null;
-  thetaClient.getThetaState = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      return {
-        fingerprint,
-        batteryLevel,
-        storageUri,
-        storageID,
-        captureStatus,
-        recordedTime,
-        recordableTime,
-        capturedPictures,
-        compositeShootingElapsedTime,
-        latestFileUrl,
-        chargingState,
-        apiVersion,
-        isPluginRunning,
-        isPluginWebServer,
-        function: _function,
-        isMySettingChanged,
-        currentMicrophone,
-        isSdCard,
-        cameraError,
-        isBatteryInsert,
-      };
-    })
+  const state = {
+    fingerprint: 'FIG_0001',
+    batteryLevel: 0.81,
+    storageUri: 'http://192.168.1.1/files/150100525831424d42075b53ce68c300/',
+    storageID: null,
+    captureStatus: ThetaClient.CaptureStatusEnum.IDLE,
+    recordedTime: 0,
+    recordableTime: 0,
+    capturedPictures: 0,
+    compositeShootingElapsedTime: 0,
+    latestFileUrl:
+      'http://192.168.1.1/files/150100525831424d42075b53ce68c300/100RICOH/R0010010.JPG',
+    chargingState: ThetaClient.ChargingStateEnum.NOT_CHARGING,
+    apiVersion: 2,
+    isPluginRunning: false,
+    isPluginWebServer: true,
+    function: ThetaClient.ShootingFunctionEnum.SELF_TIMER,
+    isMySettingChanged: false,
+    currentMicrophone: null,
+    isSdCard: false,
+    cameraError: [ThetaClient.CameraErrorEnum.COMPASS_CALIBRATION],
+    isBatteryInsert: null,
+  };
+  thetaClientNative.getThetaState = jest.fn().mockResolvedValue(state);
+
+  const res = await ThetaClient.getThetaState();
+  expect(thetaClientNative.getThetaState).toBeCalled();
+  expect(res.fingerprint).toBe(state.fingerprint);
+  expect(res.batteryLevel).toBe(state.batteryLevel);
+  expect(res.storageUri).toBe(state.storageUri);
+  expect(res.storageID).toBe(state.storageID);
+  expect(res.captureStatus).toBe(state.captureStatus);
+  expect(res.recordedTime).toBe(state.recordableTime);
+  expect(res.recordableTime).toBe(state.recordableTime);
+  expect(res.capturedPictures).toBe(state.capturedPictures);
+  expect(res.compositeShootingElapsedTime).toBe(
+    state.compositeShootingElapsedTime
   );
-  const res = await getThetaState();
-  expect(thetaClient.getThetaState).toBeCalled();
-  expect(res.fingerprint).toBe(fingerprint);
-  expect(res.batteryLevel).toBe(batteryLevel);
-  expect(res.storageUri).toBe(storageUri);
-  expect(res.storageID).toBe(storageID);
-  expect(res.captureStatus).toBe(captureStatus);
-  expect(res.recordedTime).toBe(recordableTime);
-  expect(res.recordableTime).toBe(recordableTime);
-  expect(res.capturedPictures).toBe(capturedPictures);
-  expect(res.compositeShootingElapsedTime).toBe(compositeShootingElapsedTime);
-  expect(res.latestFileUrl).toBe(latestFileUrl);
-  expect(res.chargingState).toBe(chargingState);
-  expect(res.apiVersion).toBe(apiVersion);
-  expect(res.isPluginRunning).toBe(isPluginRunning);
-  expect(res.isPluginWebServer).toBe(isPluginWebServer);
-  expect(res.function).toBe(_function);
-  expect(res.isMySettingChanged).toBe(isMySettingChanged);
-  expect(res.currentMicrophone).toBe(currentMicrophone);
-  expect(res.isSdCard).toBe(isSdCard);
-  expect(res.cameraError).toStrictEqual(cameraError);
-  expect(res.isBatteryInsert).toBe(isBatteryInsert);
+  expect(res.latestFileUrl).toBe(state.latestFileUrl);
+  expect(res.chargingState).toBe(state.chargingState);
+  expect(res.apiVersion).toBe(state.apiVersion);
+  expect(res.isPluginRunning).toBe(state.isPluginRunning);
+  expect(res.isPluginWebServer).toBe(state.isPluginWebServer);
+  expect(res.function).toBe(state.function);
+  expect(res.isMySettingChanged).toBe(state.isMySettingChanged);
+  expect(res.currentMicrophone).toBe(state.currentMicrophone);
+  expect(res.isSdCard).toBe(state.isSdCard);
+  expect(res.cameraError).toStrictEqual(state.cameraError);
+  expect(res.isBatteryInsert).toBe(state.isBatteryInsert);
 });
 
 test('Exception for call getThetaState', async () => {
-  thetaClient.getThetaState = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      throw 'error';
-    })
-  );
+  thetaClientNative.getThetaState = jest.fn(async () => {
+    throw 'error';
+  });
 
   try {
-    await getThetaState();
+    await ThetaClient.getThetaState();
     throw new Error('failed');
   } catch (error) {
     expect(error).toBe('error');
   }
-  expect(thetaClient.getThetaState).toBeCalled();
+  expect(thetaClientNative.getThetaState).toBeCalled();
 });
 
 test('Call listFiles normal', async () => {
-  const fileTypeEnum = FileTypeEnum.IMAGE;
+  const fileTypeEnum = ThetaClient.FileTypeEnum.IMAGE;
   const startPosition = 10;
   const entryCount = 10;
-  const name = 'R00100010.JPG';
-  const size = 4051440;
-  const dateTime = '2015:07:10 11:05:18';
-  const thumbnailUrl =
-    'http://192.168.1.1/files/150100525831424d42075b53ce68c300/100RICOH/R00100010.JPG?type=thumb';
-  const fileUrl =
-    'http://192.168.1.1/files/150100525831424d42075b53ce68c300/100RICOH/R00100010.JPG';
-  const totalEntries = 10;
-  thetaClient.listFiles = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      return {
-        fileList: [
-          {
-            name,
-            size,
-            dateTime,
-            thumbnailUrl,
-            fileUrl,
-          },
-        ],
-        totalEntries,
-      };
-    })
-  );
+  const files = {
+    fileList: [
+      {
+        name: 'R00100010.JPG',
+        size: 4051440,
+        dateTime: '2015:07:10 11:05:18',
+        thumbnailUrl:
+          'http://192.168.1.1/files/150100525831424d42075b53ce68c300/100RICOH/R00100010.JPG?type=thumb',
+        fileUrl:
+          'http://192.168.1.1/files/150100525831424d42075b53ce68c300/100RICOH/R00100010.JPG',
+      },
+    ],
+    totalEntries: 10,
+  };
+  thetaClientNative.listFiles = jest.fn().mockResolvedValue(files);
 
-  const res = await listFiles(fileTypeEnum, startPosition, entryCount);
-  expect(thetaClient.listFiles).toHaveBeenCalledWith(
+  const res = await ThetaClient.listFiles(
     fileTypeEnum,
     startPosition,
     entryCount
   );
-  expect(res.fileList[0]?.name).toBe(name);
-  expect(res.fileList[0]?.size).toBe(size);
-  expect(res.fileList[0]?.dateTime).toBe(dateTime);
-  expect(res.fileList[0]?.thumbnailUrl).toBe(thumbnailUrl);
-  expect(res.fileList[0]?.fileUrl).toBe(fileUrl);
-  expect(res.totalEntries).toBe(totalEntries);
+  expect(thetaClientNative.listFiles).toHaveBeenCalledWith(
+    fileTypeEnum,
+    startPosition,
+    entryCount
+  );
+  expect(res.fileList[0]!.name).toBe(files.fileList[0]!.name);
+  expect(res.fileList[0]!.size).toBe(files.fileList[0]!.size);
+  expect(res.fileList[0]!.dateTime).toBe(files.fileList[0]!.dateTime);
+  expect(res.fileList[0]!.thumbnailUrl).toBe(files.fileList[0]!.thumbnailUrl);
+  expect(res.fileList[0]!.fileUrl).toBe(files.fileList[0]!.fileUrl);
+  expect(res.totalEntries).toBe(files.totalEntries);
 });
 
 test('Exception for call listFiles', async () => {
-  const fileTypeEnum = FileTypeEnum.IMAGE;
+  const fileTypeEnum = ThetaClient.FileTypeEnum.IMAGE;
   const startPosition = 10;
   const entryCount = 10;
-  thetaClient.listFiles = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      throw 'error';
-    })
-  );
+  thetaClientNative.listFiles = jest.fn(async () => {
+    throw 'error';
+  });
 
   try {
-    await listFiles(fileTypeEnum, startPosition, entryCount);
+    await ThetaClient.listFiles(fileTypeEnum, startPosition, entryCount);
     throw new Error('failed');
   } catch (error) {
     expect(error).toBe('error');
   }
-
-  expect(thetaClient.listFiles).toHaveBeenCalledWith(
+  expect(thetaClientNative.listFiles).toHaveBeenCalledWith(
     fileTypeEnum,
     startPosition,
     entryCount
@@ -337,14 +229,10 @@ test('Call deleteFiles normal', async () => {
   const fileUrls = [
     'http://192.168.1.1/files/150100525831424d42075b53ce68c300/100RICOH/R00100010.JPG',
   ];
-  thetaClient.deleteFiles = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      return true;
-    })
-  );
+  thetaClientNative.deleteFiles = jest.fn().mockResolvedValue(true);
 
-  const res = await deleteFiles(fileUrls);
-  expect(thetaClient.deleteFiles).toHaveBeenCalledWith(fileUrls);
+  const res = await ThetaClient.deleteFiles(fileUrls);
+  expect(thetaClientNative.deleteFiles).toHaveBeenCalledWith(fileUrls);
   expect(res).toBe(true);
 });
 
@@ -352,277 +240,241 @@ test('Exception for call deleteFiles', async () => {
   const fileUrls = [
     'http://192.168.1.1/files/150100525831424d42075b53ce68c300/100RICOH/R00100010.JPG',
   ];
-  thetaClient.deleteFiles = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      throw 'error';
-    })
-  );
+  thetaClientNative.deleteFiles = jest.fn(async () => {
+    throw 'error';
+  });
 
   try {
-    await deleteFiles(fileUrls);
+    await ThetaClient.deleteFiles(fileUrls);
     throw new Error('failed');
   } catch (error) {
     expect(error).toBe('error');
   }
-  expect(thetaClient.deleteFiles).toHaveBeenCalledWith(fileUrls);
+  expect(thetaClientNative.deleteFiles).toHaveBeenCalledWith(fileUrls);
 });
 
 test('Call deleteAllFiles normal', async () => {
-  thetaClient.deleteAllFiles = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      return true;
-    })
-  );
+  thetaClientNative.deleteAllFiles = jest.fn().mockResolvedValue(true);
 
-  const res = await deleteAllFiles();
-  expect(thetaClient.deleteAllFiles).toBeCalled();
+  const res = await ThetaClient.deleteAllFiles();
+  expect(thetaClientNative.deleteAllFiles).toBeCalled();
   expect(res).toBe(true);
 });
 
 test('Exception for call deleteAllFiles', async () => {
-  thetaClient.deleteAllFiles = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      throw 'error';
-    })
-  );
+  thetaClientNative.deleteAllFiles = jest.fn(async () => {
+    throw 'error';
+  });
 
   try {
-    await deleteAllFiles();
+    await ThetaClient.deleteAllFiles();
     throw new Error('failed');
   } catch (error) {
     expect(error).toBe('error');
   }
-  expect(thetaClient.deleteAllFiles).toBeCalled();
+  expect(thetaClientNative.deleteAllFiles).toBeCalled();
 });
 
 test('Call deleteAllImageFiles normal', async () => {
-  thetaClient.deleteAllImageFiles = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      return true;
-    })
-  );
+  thetaClientNative.deleteAllImageFiles = jest.fn().mockResolvedValue(true);
 
-  const res = await deleteAllImageFiles();
-  expect(thetaClient.deleteAllImageFiles).toBeCalled();
+  const res = await ThetaClient.deleteAllImageFiles();
+  expect(thetaClientNative.deleteAllImageFiles).toBeCalled();
   expect(res).toBe(true);
 });
 
 test('Exception for call deleteAllImageFiles', async () => {
-  thetaClient.deleteAllImageFiles = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      throw 'error';
-    })
-  );
+  thetaClientNative.deleteAllImageFiles = jest.fn(async () => {
+    throw 'error';
+  });
 
   try {
-    await deleteAllImageFiles();
+    await ThetaClient.deleteAllImageFiles();
     throw new Error('failed');
   } catch (error) {
     expect(error).toBe('error');
   }
-  expect(thetaClient.deleteAllImageFiles).toBeCalled();
+  expect(thetaClientNative.deleteAllImageFiles).toBeCalled();
 });
 
 test('Call deleteAllVideoFiles normal', async () => {
-  thetaClient.deleteAllVideoFiles = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      return true;
-    })
-  );
+  thetaClientNative.deleteAllVideoFiles = jest.fn().mockResolvedValue(true);
 
-  const res = await deleteAllVideoFiles();
-  expect(thetaClient.deleteAllVideoFiles).toBeCalled();
+  const res = await ThetaClient.deleteAllVideoFiles();
+  expect(thetaClientNative.deleteAllVideoFiles).toBeCalled();
   expect(res).toBe(true);
 });
 
 test('Exception for call deleteAllVideoFiles', async () => {
-  thetaClient.deleteAllVideoFiles = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      throw 'error';
-    })
-  );
+  thetaClientNative.deleteAllVideoFiles = jest.fn(async () => {
+    throw 'error';
+  });
 
   try {
-    await deleteAllVideoFiles();
+    await ThetaClient.deleteAllVideoFiles();
     throw new Error('failed');
   } catch (error) {
     expect(error).toBe('error');
   }
-  expect(thetaClient.deleteAllVideoFiles).toBeCalled();
+  expect(thetaClientNative.deleteAllVideoFiles).toBeCalled();
 });
 
 test('Call getOptions normal', async () => {
-  const options: Options = {
-    aperture: ApertureEnum.APERTURE_2_0,
-    captureMode: CaptureModeEnum.IMAGE,
+  const options: ThetaClient.Options = {
+    aperture: ThetaClient.ApertureEnum.APERTURE_2_0,
+    captureMode: ThetaClient.CaptureModeEnum.IMAGE,
   };
-  thetaClient.getOptions = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      return options;
-    })
-  );
+  thetaClientNative.getOptions = jest.fn().mockResolvedValue(options);
 
-  const optionsName = [OptionNameEnum.CaptureMode, OptionNameEnum.GpsInfo];
-  const res = await getOptions(optionsName);
-  expect(thetaClient.getOptions).toHaveBeenCalledWith(optionsName);
+  const optionsName = [
+    ThetaClient.OptionNameEnum.CaptureMode,
+    ThetaClient.OptionNameEnum.GpsInfo,
+  ];
+  const res = await ThetaClient.getOptions(optionsName);
+  expect(thetaClientNative.getOptions).toHaveBeenCalledWith(optionsName);
   expect(res).toStrictEqual(options);
 });
 
 test('Exception for call getOptions', async () => {
-  thetaClient.getOptions = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      throw 'error';
-    })
-  );
+  thetaClientNative.getOptions = jest.fn(async () => {
+    throw 'error';
+  });
 
-  const optionsName = [OptionNameEnum.CaptureMode, OptionNameEnum.GpsInfo];
+  const optionsName = [
+    ThetaClient.OptionNameEnum.CaptureMode,
+    ThetaClient.OptionNameEnum.GpsInfo,
+  ];
   try {
-    await getOptions(optionsName);
+    await ThetaClient.getOptions(optionsName);
     throw new Error('failed');
   } catch (error) {
     expect(error).toBe('error');
   }
-  expect(thetaClient.getOptions).toHaveBeenCalledWith(optionsName);
+  expect(thetaClientNative.getOptions).toHaveBeenCalledWith(optionsName);
 });
 
 test('Call setOptions normal', async () => {
-  thetaClient.setOptions = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      return true;
-    })
-  );
-  const options: Options = {
-    aperture: ApertureEnum.APERTURE_2_0,
-    captureMode: CaptureModeEnum.IMAGE,
+  thetaClientNative.setOptions = jest.fn().mockResolvedValue(true);
+  const options: ThetaClient.Options = {
+    aperture: ThetaClient.ApertureEnum.APERTURE_2_0,
+    captureMode: ThetaClient.CaptureModeEnum.IMAGE,
   };
-  const res = await setOptions(options);
-  expect(thetaClient.setOptions).toHaveBeenCalledWith(options);
+
+  const res = await ThetaClient.setOptions(options);
+  expect(thetaClientNative.setOptions).toHaveBeenCalledWith(options);
   expect(res).toBeTruthy();
 });
 
 test('Exception for call setOptions', async () => {
-  thetaClient.setOptions = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      throw 'error';
-    })
-  );
-  const options: Options = {
-    aperture: ApertureEnum.APERTURE_2_0,
-    captureMode: CaptureModeEnum.IMAGE,
+  thetaClientNative.setOptions = jest.fn(async () => {
+    throw 'error';
+  });
+  const options: ThetaClient.Options = {
+    aperture: ThetaClient.ApertureEnum.APERTURE_2_0,
+    captureMode: ThetaClient.CaptureModeEnum.IMAGE,
   };
+
   try {
-    await setOptions(options);
+    await ThetaClient.setOptions(options);
     throw new Error('failed');
   } catch (error) {
     expect(error).toBe('error');
   }
-  expect(thetaClient.setOptions).toHaveBeenCalledWith(options);
+  expect(thetaClientNative.setOptions).toHaveBeenCalledWith(options);
 });
 
 test('Call getLivePreview normal', async () => {
-  thetaClient.getLivePreview = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      return true;
-    })
-  );
-  const res = await getLivePreview();
-  expect(thetaClient.getLivePreview).toBeCalled();
+  thetaClientNative.getLivePreview = jest.fn().mockResolvedValue(true);
+
+  const res = await ThetaClient.getLivePreview();
+  expect(thetaClientNative.getLivePreview).toBeCalled();
   expect(res).toBeTruthy();
 });
 
 test('Exception for call getLivePreview', async () => {
-  thetaClient.getLivePreview = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      throw 'error';
-    })
-  );
+  thetaClientNative.getLivePreview = jest.fn(async () => {
+    throw 'error';
+  });
+
   try {
-    await getLivePreview();
+    await ThetaClient.getLivePreview();
     throw new Error('failed');
   } catch (error) {
     expect(error).toBe('error');
   }
-  expect(thetaClient.getLivePreview).toBeCalled();
+  expect(thetaClientNative.getLivePreview).toBeCalled();
 });
 
 test('Call stopLivePreview normal', () => {
-  thetaClient.stopLivePreview = jest.fn().mockImplementation(
-    jest.fn(() => {
-      return;
-    })
-  );
-  stopLivePreview();
-  expect(thetaClient.stopLivePreview).toBeCalled();
+  thetaClientNative.stopLivePreview = jest.fn(() => {
+    return;
+  });
+
+  ThetaClient.stopLivePreview();
+  expect(thetaClientNative.stopLivePreview).toBeCalled();
 });
 
 test('Exception for call stopLivePreview', () => {
-  thetaClient.stopLivePreview = jest.fn().mockImplementation(
-    jest.fn(() => {
-      throw 'error';
-    })
-  );
+  thetaClientNative.stopLivePreview = jest.fn(() => {
+    throw 'error';
+  });
+
   try {
-    stopLivePreview();
+    ThetaClient.stopLivePreview();
     throw new Error('failed');
   } catch (error) {
     expect(error).toBe('error');
   }
-  expect(thetaClient.stopLivePreview).toBeCalled();
+  expect(thetaClientNative.stopLivePreview).toBeCalled();
 });
 
 test('Call getPhotoCaptureBuilder normal', () => {
-  thetaClient.getPhotoCaptureBuilder = jest.fn().mockImplementation(
-    jest.fn(() => {
-      return;
-    })
-  );
-  const res = getPhotoCaptureBuilder();
-  expect(thetaClient.getPhotoCaptureBuilder).toBeCalled();
-  expect(res).toBeInstanceOf(PhotoCaptureBuilder);
+  thetaClientNative.getPhotoCaptureBuilder = jest.fn(() => {
+    return;
+  });
+
+  const res = ThetaClient.getPhotoCaptureBuilder();
+  expect(thetaClientNative.getPhotoCaptureBuilder).toBeCalled();
+  expect(res).toBeInstanceOf(ThetaClient.PhotoCaptureBuilder);
 });
 
 test('Exception for call getPhotoCaptureBuilder', () => {
-  thetaClient.getPhotoCaptureBuilder = jest.fn().mockImplementation(
-    jest.fn(() => {
-      throw 'error';
-    })
-  );
+  thetaClientNative.getPhotoCaptureBuilder = jest.fn(() => {
+    throw 'error';
+  });
+
   try {
-    getPhotoCaptureBuilder();
+    ThetaClient.getPhotoCaptureBuilder();
     throw new Error('failed');
   } catch (error) {
     expect(error).toBe('error');
   }
-  expect(thetaClient.getPhotoCaptureBuilder).toBeCalled();
+  expect(thetaClientNative.getPhotoCaptureBuilder).toBeCalled();
 });
 
 test('Call buildPhotoCapture normal', async () => {
-  const aperature = ApertureEnum.APERTURE_2_0;
+  const aperature = ThetaClient.ApertureEnum.APERTURE_2_0;
   const colorTemperature = 2;
-  const exposureCompensation = ExposureCompensationEnum.M_0_3;
-  const exposureDelay = ExposureDelayEnum.DELAY_1;
-  const exposureProgram = ExposureProgramEnum.APERTURE_PRIORITY;
-  const fileFormat = PhotoFileFormatEnum.IMAGE_11K;
-  const filter = FilterEnum.HDR;
+  const exposureCompensation = ThetaClient.ExposureCompensationEnum.M_0_3;
+  const exposureDelay = ThetaClient.ExposureDelayEnum.DELAY_1;
+  const exposureProgram = ThetaClient.ExposureProgramEnum.APERTURE_PRIORITY;
+  const fileFormat = ThetaClient.PhotoFileFormatEnum.IMAGE_11K;
+  const filter = ThetaClient.FilterEnum.HDR;
   const gpsInfo = {
     latitude: 1.0,
     longitude: 2.0,
     altitude: 3.0,
     dateTimeZone: '2022:01:01 00:01:00+09:00',
   };
-  const gpsTagRecording = GpsTagRecordingEnum.ON;
-  const iso = IsoEnum.ISO_100;
-  const isoAutoHighLimit = IsoAutoHighLimitEnum.ISO_125;
-  const whiteBalance = WhiteBalanceEnum.AUTO;
-
-  thetaClient.getPhotoCaptureBuilder = jest.fn().mockImplementation(
-    jest.fn(() => {
-      return;
-    })
-  );
-
-  thetaClient.buildPhotoCapture = jest.fn().mockImplementation(
-    jest.fn(async (options: Options) => {
+  const gpsTagRecording = ThetaClient.GpsTagRecordingEnum.ON;
+  const iso = ThetaClient.IsoEnum.ISO_100;
+  const isoAutoHighLimit = ThetaClient.IsoAutoHighLimitEnum.ISO_125;
+  const whiteBalance = ThetaClient.WhiteBalanceEnum.AUTO;
+  thetaClientNative.getPhotoCaptureBuilder = jest.fn(() => {
+    return;
+  });
+  thetaClientNative.buildPhotoCapture = jest.fn(
+    async (options: ThetaClient.Options) => {
       expect(options.aperture).toBe(aperature);
       expect(options.colorTemperature).toBe(colorTemperature);
       expect(options.exposureCompensation).toBe(exposureCompensation);
@@ -636,10 +488,10 @@ test('Call buildPhotoCapture normal', async () => {
       expect(options.isoAutoHighLimit).toBe(isoAutoHighLimit);
       expect(options.whiteBalance).toBe(whiteBalance);
       return true;
-    })
+    }
   );
 
-  const res = await getPhotoCaptureBuilder()
+  const res = await ThetaClient.getPhotoCaptureBuilder()
     .setAperture(aperature)
     .setColorTemperature(colorTemperature)
     .setExposureCompensation(exposureCompensation)
@@ -653,139 +505,109 @@ test('Call buildPhotoCapture normal', async () => {
     .setIsoAutoHighLimit(isoAutoHighLimit)
     .setWhiteBalance(whiteBalance)
     .build();
-  expect(thetaClient.buildPhotoCapture).toBeCalled();
-  expect(res).toBeInstanceOf(PhotoCapture);
+  expect(thetaClientNative.buildPhotoCapture).toBeCalled();
+  expect(res).toBeInstanceOf(ThetaClient.PhotoCapture);
 });
 
 test('Exception for call buildPhotoCapture', async () => {
-  thetaClient.getPhotoCaptureBuilder = jest.fn().mockImplementation(
-    jest.fn(() => {
-      return;
-    })
-  );
-
-  thetaClient.buildPhotoCapture = jest.fn().mockImplementation(
-    jest.fn(() => {
-      throw 'error';
-    })
-  );
+  thetaClientNative.getPhotoCaptureBuilder = jest.fn(() => {
+    return;
+  });
+  thetaClientNative.buildPhotoCapture = jest.fn(async () => {
+    throw 'error';
+  });
 
   try {
-    await getPhotoCaptureBuilder().build();
+    await ThetaClient.getPhotoCaptureBuilder().build();
     throw new Error('failed');
   } catch (error) {
     expect(error).toBe('error');
   }
-  expect(thetaClient.getPhotoCaptureBuilder).toBeCalled();
+  expect(thetaClientNative.getPhotoCaptureBuilder).toBeCalled();
 });
 
 test('Call takePicture normal', async () => {
   const fileUrl =
     'http://192.168.1.1/files/150100525831424d42075b53ce68c300/100RICOH/R00100010.JPG';
-  thetaClient.getPhotoCaptureBuilder = jest.fn().mockImplementation(
-    jest.fn(() => {
-      return;
-    })
-  );
+  thetaClientNative.getPhotoCaptureBuilder = jest.fn(() => {
+    return;
+  });
+  thetaClientNative.buildPhotoCapture = jest.fn().mockResolvedValue(true);
+  thetaClientNative.takePicture = jest.fn().mockResolvedValue(fileUrl);
 
-  thetaClient.buildPhotoCapture = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      return true;
-    })
-  );
-
-  thetaClient.takePicture = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      return fileUrl;
-    })
-  );
-
-  const res = await (await getPhotoCaptureBuilder().build()).takePicture();
-  expect(thetaClient.takePicture).toBeCalled();
+  const res = await (
+    await ThetaClient.getPhotoCaptureBuilder().build()
+  ).takePicture();
+  expect(thetaClientNative.takePicture).toBeCalled();
   expect(res).toBe(fileUrl);
 });
 
 test('Exception for call takePicture normal', async () => {
-  thetaClient.getPhotoCaptureBuilder = jest.fn().mockImplementation(
-    jest.fn(() => {
-      return;
-    })
-  );
-
-  thetaClient.buildPhotoCapture = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      return true;
-    })
-  );
-
-  thetaClient.takePicture = jest.fn().mockImplementation(
-    jest.fn(() => {
-      throw 'error';
-    })
-  );
+  thetaClientNative.getPhotoCaptureBuilder = jest.fn(() => {
+    return;
+  });
+  thetaClientNative.buildPhotoCapture = jest.fn().mockResolvedValue(true);
+  thetaClientNative.takePicture = jest.fn(async () => {
+    throw 'error';
+  });
 
   try {
-    await (await getPhotoCaptureBuilder().build()).takePicture();
+    await (await ThetaClient.getPhotoCaptureBuilder().build()).takePicture();
     throw new Error('failed');
   } catch (error) {
     expect(error).toBe('error');
   }
-  expect(thetaClient.takePicture).toBeCalled();
+  expect(thetaClientNative.takePicture).toBeCalled();
 });
 
 test('Call getVideoCaptureBuilder normal', () => {
-  thetaClient.getVideoCaptureBuilder = jest.fn().mockImplementation(
-    jest.fn(() => {
-      return;
-    })
-  );
-  const res = getVideoCaptureBuilder();
-  expect(thetaClient.getVideoCaptureBuilder).toBeCalled();
-  expect(res).toBeInstanceOf(VideoCaptureBuilder);
+  thetaClientNative.getVideoCaptureBuilder = jest.fn(() => {
+    return;
+  });
+
+  const res = ThetaClient.getVideoCaptureBuilder();
+  expect(thetaClientNative.getVideoCaptureBuilder).toBeCalled();
+  expect(res).toBeInstanceOf(ThetaClient.VideoCaptureBuilder);
 });
 
 test('Exception for call getVideoCaptureBuilder', () => {
-  thetaClient.getVideoCaptureBuilder = jest.fn().mockImplementation(
-    jest.fn(() => {
-      throw 'error';
-    })
-  );
+  thetaClientNative.getVideoCaptureBuilder = jest.fn(() => {
+    throw 'error';
+  });
+
   try {
-    getVideoCaptureBuilder();
+    ThetaClient.getVideoCaptureBuilder();
     throw new Error('failed');
   } catch (error) {
     expect(error).toBe('error');
   }
-  expect(thetaClient.getVideoCaptureBuilder).toBeCalled();
+  expect(thetaClientNative.getVideoCaptureBuilder).toBeCalled();
 });
 
 test('Call buildVideoCapture normal', async () => {
-  const aperature = ApertureEnum.APERTURE_2_0;
+  const aperature = ThetaClient.ApertureEnum.APERTURE_2_0;
   const colorTemperature = 2;
-  const exposureCompensation = ExposureCompensationEnum.M_0_3;
-  const exposureDelay = ExposureDelayEnum.DELAY_1;
-  const exposureProgram = ExposureProgramEnum.APERTURE_PRIORITY;
-  const fileFormat = VideoFileFormatEnum.VIDEO_2K_30F;
+  const exposureCompensation = ThetaClient.ExposureCompensationEnum.M_0_3;
+  const exposureDelay = ThetaClient.ExposureDelayEnum.DELAY_1;
+  const exposureProgram = ThetaClient.ExposureProgramEnum.APERTURE_PRIORITY;
+  const fileFormat = ThetaClient.VideoFileFormatEnum.VIDEO_2K_30F;
   const gpsInfo = {
     latitude: 1.0,
     longitude: 2.0,
     altitude: 3.0,
     dateTimeZone: '2022:01:01 00:01:00+09:00',
   };
-  const gpsTagRecording = GpsTagRecordingEnum.ON;
-  const iso = IsoEnum.ISO_100;
-  const isoAutoHighLimit = IsoAutoHighLimitEnum.ISO_125;
-  const maxRecordableTime = MaxRecordableTimeEnum.RECORDABLE_TIME_1500;
-  const whiteBalance = WhiteBalanceEnum.AUTO;
-
-  thetaClient.getVideoCaptureBuilder = jest.fn().mockImplementation(
-    jest.fn(() => {
-      return;
-    })
-  );
-
-  thetaClient.buildVideoCapture = jest.fn().mockImplementation(
-    jest.fn(async (options: Options) => {
+  const gpsTagRecording = ThetaClient.GpsTagRecordingEnum.ON;
+  const iso = ThetaClient.IsoEnum.ISO_100;
+  const isoAutoHighLimit = ThetaClient.IsoAutoHighLimitEnum.ISO_125;
+  const maxRecordableTime =
+    ThetaClient.MaxRecordableTimeEnum.RECORDABLE_TIME_1500;
+  const whiteBalance = ThetaClient.WhiteBalanceEnum.AUTO;
+  thetaClientNative.getVideoCaptureBuilder = jest.fn(() => {
+    return;
+  });
+  thetaClientNative.buildVideoCapture = jest.fn(
+    async (options: ThetaClient.Options) => {
       expect(options.aperture).toBe(aperature);
       expect(options.colorTemperature).toBe(colorTemperature);
       expect(options.exposureCompensation).toBe(exposureCompensation);
@@ -799,10 +621,10 @@ test('Call buildVideoCapture normal', async () => {
       expect(options.maxRecordableTime).toBe(maxRecordableTime);
       expect(options.whiteBalance).toBe(whiteBalance);
       return true;
-    })
+    }
   );
 
-  const res = await getVideoCaptureBuilder()
+  const res = await ThetaClient.getVideoCaptureBuilder()
     .setAperture(aperature)
     .setColorTemperature(colorTemperature)
     .setExposureCompensation(exposureCompensation)
@@ -816,280 +638,205 @@ test('Call buildVideoCapture normal', async () => {
     .setMaxRecordableTime(maxRecordableTime)
     .setWhiteBalance(whiteBalance)
     .build();
-  expect(thetaClient.buildVideoCapture).toBeCalled();
-  expect(res).toBeInstanceOf(VideoCapture);
+  expect(thetaClientNative.buildVideoCapture).toBeCalled();
+  expect(res).toBeInstanceOf(ThetaClient.VideoCapture);
 });
 
 test('Exception for call buildVideoCapture', async () => {
-  thetaClient.getVideoCaptureBuilder = jest.fn().mockImplementation(
-    jest.fn(() => {
-      return;
-    })
-  );
-
-  thetaClient.buildVideoCapture = jest.fn().mockImplementation(
-    jest.fn(() => {
-      throw 'error';
-    })
-  );
+  thetaClientNative.getVideoCaptureBuilder = jest.fn(() => {
+    return;
+  });
+  thetaClientNative.buildVideoCapture = jest.fn(async () => {
+    throw 'error';
+  });
 
   try {
-    await getVideoCaptureBuilder().build();
+    await ThetaClient.getVideoCaptureBuilder().build();
     throw new Error('failed');
   } catch (error) {
     expect(error).toBe('error');
   }
-  expect(thetaClient.getVideoCaptureBuilder).toBeCalled();
+  expect(thetaClientNative.getVideoCaptureBuilder).toBeCalled();
 });
 
 test('Call startCapture normal', async () => {
   const fileUrl =
     'http://192.168.1.1/files/150100525831424d42075b53ce68c300/100RICOH/R00100010.MP4';
-  thetaClient.getVideoCaptureBuilder = jest.fn().mockImplementation(
-    jest.fn(() => {
-      return;
-    })
-  );
+  thetaClientNative.getVideoCaptureBuilder = jest.fn(() => {
+    return;
+  });
+  thetaClientNative.buildVideoCapture = jest.fn().mockResolvedValue(true);
+  thetaClientNative.startCapture = jest.fn().mockResolvedValue(fileUrl);
 
-  thetaClient.buildVideoCapture = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      return true;
-    })
-  );
-
-  thetaClient.startCapture = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      return fileUrl;
-    })
-  );
-
-  const res = await (await getVideoCaptureBuilder().build()).startCapture();
-  expect(thetaClient.startCapture).toBeCalled();
+  const res = await (
+    await ThetaClient.getVideoCaptureBuilder().build()
+  ).startCapture();
+  expect(thetaClientNative.startCapture).toBeCalled();
   expect(res).toBe(fileUrl);
 });
 
 test('Exception for call startCapture', async () => {
-  thetaClient.getVideoCaptureBuilder = jest.fn().mockImplementation(
-    jest.fn(() => {
-      return;
-    })
-  );
-
-  thetaClient.buildVideoCapture = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      return true;
-    })
-  );
-
-  thetaClient.startCapture = jest.fn().mockImplementation(
-    jest.fn(() => {
-      throw 'error';
-    })
-  );
+  thetaClientNative.getVideoCaptureBuilder = jest.fn(() => {
+    return;
+  });
+  thetaClientNative.buildVideoCapture = jest.fn().mockResolvedValue(true);
+  thetaClientNative.startCapture = jest.fn(async () => {
+    throw 'error';
+  });
 
   try {
-    await (await getVideoCaptureBuilder().build()).startCapture();
+    await (await ThetaClient.getVideoCaptureBuilder().build()).startCapture();
     throw new Error('failed');
   } catch (error) {
     expect(error).toBe('error');
   }
-  expect(thetaClient.startCapture).toBeCalled();
+  expect(thetaClientNative.startCapture).toBeCalled();
 });
 
 test('Call stopCapture normal', async () => {
-  thetaClient.getVideoCaptureBuilder = jest.fn().mockImplementation(
-    jest.fn(() => {
-      return;
-    })
-  );
+  thetaClientNative.getVideoCaptureBuilder = jest.fn(() => {
+    return;
+  });
+  thetaClientNative.buildVideoCapture = jest.fn().mockResolvedValue(true);
+  thetaClientNative.stopCapture = jest.fn(() => {
+    return;
+  });
 
-  thetaClient.buildVideoCapture = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      return true;
-    })
-  );
-
-  thetaClient.stopCapture = jest.fn().mockImplementation(
-    jest.fn(() => {
-      return;
-    })
-  );
-
-  (await getVideoCaptureBuilder().build()).stopCapture();
-  expect(thetaClient.stopCapture).toBeCalled();
+  (await ThetaClient.getVideoCaptureBuilder().build()).stopCapture();
+  expect(thetaClientNative.stopCapture).toBeCalled();
 });
 
 test('Exception for call stopCapture', async () => {
-  thetaClient.getVideoCaptureBuilder = jest.fn().mockImplementation(
-    jest.fn(() => {
-      return;
-    })
-  );
-
-  thetaClient.buildVideoCapture = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      return true;
-    })
-  );
-
-  thetaClient.stopCapture = jest.fn().mockImplementation(
-    jest.fn(() => {
-      throw 'error';
-    })
-  );
+  thetaClientNative.getVideoCaptureBuilder = jest.fn(() => {
+    return;
+  });
+  thetaClientNative.buildVideoCapture = jest.fn().mockResolvedValue(true);
+  thetaClientNative.stopCapture = jest.fn(() => {
+    throw 'error';
+  });
 
   try {
-    (await getVideoCaptureBuilder().build()).stopCapture();
+    (await ThetaClient.getVideoCaptureBuilder().build()).stopCapture();
     throw new Error('failed');
   } catch (error) {
     expect(error).toBe('error');
   }
-  expect(thetaClient.stopCapture).toBeCalled();
+  expect(thetaClientNative.stopCapture).toBeCalled();
 });
 
 test('Call finishWlan normal', async () => {
-  thetaClient.finishWlan = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      return true;
-    })
-  );
+  thetaClientNative.finishWlan = jest.fn().mockResolvedValue(true);
 
-  const res = await finishWlan();
-  expect(thetaClient.finishWlan).toBeCalled();
+  const res = await ThetaClient.finishWlan();
+  expect(thetaClientNative.finishWlan).toBeCalled();
   expect(res).toBe(true);
 });
 
 test('Exception for call finishWlan', async () => {
-  thetaClient.finishWlan = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      throw 'error';
-    })
-  );
+  thetaClientNative.finishWlan = jest.fn(async () => {
+    throw 'error';
+  });
 
   try {
-    await finishWlan();
+    await ThetaClient.finishWlan();
     throw new Error('failed');
   } catch (error) {
     expect(error).toBe('error');
   }
-  expect(thetaClient.finishWlan).toBeCalled();
+  expect(thetaClientNative.finishWlan).toBeCalled();
 });
 
 test('Call getMetadata normal', async () => {
   const fileUrl =
     'http://192.168.1.1/files/150100525831424d42075b53ce68c300/100RICOH/R00100010.JPG';
-  const exifVersion = '0231';
-  const dateTime = '2015:07:10 11:05:18';
-  const imageWidth = 6720;
-  const imageLength = 3360;
-  const gpsLatitude = 35.68;
-  const gpsLongitude = 139.76;
-  const poseHeadingDegrees = 11.11;
-  const fullPanoWidthPixels = 6720;
-  const fullPanoHeightPixels = 3360;
-  thetaClient.getMetadata = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      const metadata: MetaInfo = {
-        exif: {
-          exifVersion,
-          dateTime,
-          imageWidth,
-          imageLength,
-          gpsLatitude,
-          gpsLongitude,
-        },
-        xmp: {
-          poseHeadingDegrees,
-          fullPanoWidthPixels,
-          fullPanoHeightPixels,
-        },
-      };
-      return metadata;
-    })
-  );
+  const metadata = {
+    exif: {
+      exifVersion: '0231',
+      dateTime: '2015:07:10 11:05:18',
+      imageWidth: 6720,
+      imageLength: 3360,
+      gpsLatitude: 35.68,
+      gpsLongitude: 139.76,
+    },
+    xmp: {
+      poseHeadingDegrees: 11.11,
+      fullPanoWidthPixels: 6720,
+      fullPanoHeightPixels: 3360,
+    },
+  };
+  thetaClientNative.getMetadata = jest.fn().mockResolvedValue(metadata);
 
-  const res = await getMetadata(fileUrl);
-  expect(thetaClient.getMetadata).toHaveBeenCalledWith(fileUrl);
-  expect(res.exif?.exifVersion).toBe(exifVersion);
-  expect(res.exif?.dateTime).toBe(dateTime);
-  expect(res.exif?.imageWidth).toBe(imageWidth);
-  expect(res.exif?.imageLength).toBe(imageLength);
-  expect(res.exif?.gpsLatitude).toBe(gpsLatitude);
-  expect(res.exif?.gpsLongitude).toBe(gpsLongitude);
-  expect(res.xmp?.poseHeadingDegrees).toBe(poseHeadingDegrees);
-  expect(res.xmp?.fullPanoWidthPixels).toBe(fullPanoWidthPixels);
-  expect(res.xmp?.fullPanoHeightPixels).toBe(fullPanoHeightPixels);
+  const res = await ThetaClient.getMetadata(fileUrl);
+  expect(thetaClientNative.getMetadata).toHaveBeenCalledWith(fileUrl);
+  expect(res.exif!.exifVersion).toBe(metadata.exif.exifVersion);
+  expect(res.exif!.dateTime).toBe(metadata.exif.dateTime);
+  expect(res.exif!.imageWidth).toBe(metadata.exif.imageWidth);
+  expect(res.exif!.imageLength).toBe(metadata.exif.imageLength);
+  expect(res.exif!.gpsLatitude).toBe(metadata.exif.gpsLatitude);
+  expect(res.exif!.gpsLongitude).toBe(metadata.exif.gpsLongitude);
+  expect(res.xmp!.poseHeadingDegrees).toBe(metadata.xmp.poseHeadingDegrees);
+  expect(res.xmp!.fullPanoWidthPixels).toBe(metadata.xmp.fullPanoWidthPixels);
+  expect(res.xmp!.fullPanoHeightPixels).toBe(metadata.xmp.fullPanoHeightPixels);
 });
 
 test('Exception for call getMetadata', async () => {
   const fileUrl =
     'http://192.168.1.1/files/150100525831424d42075b53ce68c300/100RICOH/R00100010.JPG';
-  thetaClient.getMetadata = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      throw 'error';
-    })
-  );
+  thetaClientNative.getMetadata = jest.fn(async () => {
+    throw 'error';
+  });
+
   try {
-    await getMetadata(fileUrl);
+    await ThetaClient.getMetadata(fileUrl);
     throw new Error('failed');
   } catch (error) {
     expect(error).toBe('error');
   }
-  expect(thetaClient.getMetadata).toHaveBeenCalledWith(fileUrl);
+  expect(thetaClientNative.getMetadata).toHaveBeenCalledWith(fileUrl);
 });
 
 test('Call reset normal', async () => {
-  thetaClient.reset = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      return true;
-    })
-  );
+  thetaClientNative.reset = jest.fn().mockResolvedValue(true);
 
-  const res = await reset();
-  expect(thetaClient.reset).toBeCalled();
+  const res = await ThetaClient.reset();
+  expect(thetaClientNative.reset).toBeCalled();
   expect(res).toBe(true);
 });
 
 test('Exception for call reset', async () => {
-  thetaClient.reset = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      throw 'error';
-    })
-  );
+  thetaClientNative.reset = jest.fn(async () => {
+    throw 'error';
+  });
+
   try {
-    await reset();
+    await ThetaClient.reset();
     throw new Error('failed');
   } catch (error) {
     expect(error).toBe('error');
   }
-  expect(thetaClient.reset).toBeCalled();
+  expect(thetaClientNative.reset).toBeCalled();
 });
 
 test('Call stopSelfTimer normal', async () => {
-  thetaClient.stopSelfTimer = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      return true;
-    })
-  );
+  thetaClientNative.stopSelfTimer = jest.fn().mockResolvedValue(true);
 
-  const res = await stopSelfTimer();
-  expect(thetaClient.stopSelfTimer).toBeCalled();
+  const res = await ThetaClient.stopSelfTimer();
+  expect(thetaClientNative.stopSelfTimer).toBeCalled();
   expect(res).toBe(true);
 });
 
 test('Exception for call stopSelfTimer', async () => {
-  thetaClient.stopSelfTimer = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      throw 'error';
-    })
-  );
+  thetaClientNative.stopSelfTimer = jest.fn(async () => {
+    throw 'error';
+  });
+
   try {
-    await stopSelfTimer();
+    await ThetaClient.stopSelfTimer();
     throw new Error('failed');
   } catch (error) {
     expect(error).toBe('error');
   }
-  expect(thetaClient.stopSelfTimer).toBeCalled();
+  expect(thetaClientNative.stopSelfTimer).toBeCalled();
 });
 
 test('Call convertVideoFormats normal', async () => {
@@ -1097,18 +844,14 @@ test('Call convertVideoFormats normal', async () => {
     'http://192.168.1.1/files/150100525831424d42075b53ce68c300/100RICOH/R00100010.MP4';
   const toLowResolution = true;
   const applyTopBottomCorrection = true;
-  thetaClient.convertVideoFormats = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      return true;
-    })
-  );
+  thetaClientNative.convertVideoFormats = jest.fn().mockResolvedValue(true);
 
-  const res = await convertVideoFormats(
+  const res = await ThetaClient.convertVideoFormats(
     fileUrl,
     toLowResolution,
     applyTopBottomCorrection
   );
-  expect(thetaClient.convertVideoFormats).toHaveBeenCalledWith(
+  expect(thetaClientNative.convertVideoFormats).toHaveBeenCalledWith(
     fileUrl,
     toLowResolution,
     applyTopBottomCorrection
@@ -1121,14 +864,12 @@ test('Exception call for convertVideoFormats', async () => {
     'http://192.168.1.1/files/150100525831424d42075b53ce68c300/100RICOH/R00100010.MP4';
   const toLowResolution = true;
   const applyTopBottomCorrection = true;
-  thetaClient.convertVideoFormats = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      throw 'error';
-    })
-  );
+  thetaClientNative.convertVideoFormats = jest.fn(async () => {
+    throw 'error';
+  });
 
   try {
-    await convertVideoFormats(
+    await ThetaClient.convertVideoFormats(
       fileUrl,
       toLowResolution,
       applyTopBottomCorrection
@@ -1137,7 +878,7 @@ test('Exception call for convertVideoFormats', async () => {
   } catch (error) {
     expect(error).toBe('error');
   }
-  expect(thetaClient.convertVideoFormats).toHaveBeenCalledWith(
+  expect(thetaClientNative.convertVideoFormats).toHaveBeenCalledWith(
     fileUrl,
     toLowResolution,
     applyTopBottomCorrection
@@ -1145,136 +886,110 @@ test('Exception call for convertVideoFormats', async () => {
 });
 
 test('Call cancelVideoConvert normal', async () => {
-  thetaClient.cancelVideoConvert = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      return true;
-    })
-  );
+  thetaClientNative.cancelVideoConvert = jest.fn().mockResolvedValue(true);
 
-  const res = await cancelVideoConvert();
-  expect(thetaClient.cancelVideoConvert).toBeCalled();
+  const res = await ThetaClient.cancelVideoConvert();
+  expect(thetaClientNative.cancelVideoConvert).toBeCalled();
   expect(res).toBe(true);
 });
 
 test('Exception for call cancelVideoConvert', async () => {
-  thetaClient.cancelVideoConvert = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      throw 'error';
-    })
-  );
+  thetaClientNative.cancelVideoConvert = jest.fn(async () => {
+    throw 'error';
+  });
+
   try {
-    await cancelVideoConvert();
+    await ThetaClient.cancelVideoConvert();
     throw new Error('failed');
   } catch (error) {
     expect(error).toBe('error');
   }
-  expect(thetaClient.cancelVideoConvert).toBeCalled();
+  expect(thetaClientNative.cancelVideoConvert).toBeCalled();
 });
 
 test('Call setBluetoothDevice normal', async () => {
   const uuid = '00000000-0000-0000-0000-000000000000';
-  thetaClient.setBluetoothDevice = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      return true;
-    })
-  );
+  thetaClientNative.setBluetoothDevice = jest.fn().mockResolvedValue(true);
 
-  const res = await setBluetoothDevice(uuid);
-  expect(thetaClient.setBluetoothDevice).toHaveBeenCalledWith(uuid);
+  const res = await ThetaClient.setBluetoothDevice(uuid);
+  expect(thetaClientNative.setBluetoothDevice).toHaveBeenCalledWith(uuid);
   expect(res).toBe(true);
 });
 
 test('Exception call for setBluetoothDevice', async () => {
   const uuid = '00000000-0000-0000-0000-000000000000';
-  thetaClient.setBluetoothDevice = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      throw 'error';
-    })
-  );
+  thetaClientNative.setBluetoothDevice = jest.fn(async () => {
+    throw 'error';
+  });
 
   try {
-    await setBluetoothDevice(uuid);
+    await ThetaClient.setBluetoothDevice(uuid);
     throw new Error('failed');
   } catch (error) {
     expect(error).toBe('error');
   }
-  expect(thetaClient.setBluetoothDevice).toHaveBeenCalledWith(uuid);
+  expect(thetaClientNative.setBluetoothDevice).toHaveBeenCalledWith(uuid);
 });
 
 test('Call listAccessPOints normal', async () => {
-  const ssid = 'Test-Access-Point';
-  const ssidStealth = true;
-  const authMode = AuthModeEnum.WEP;
-  const connectionPriority = 1;
-  const usingDhcp = false;
-  const ipAddress = '192.168.1.254';
-  const subnetMask = '255.255.255.0';
-  const defaultGateway = '192.168.1.1';
+  const accessPoint = [
+    {
+      ssid: 'Test-Access-Point',
+      ssidStealth: true,
+      authMode: ThetaClient.AuthModeEnum.WEP,
+      connectionPriority: 1,
+      usingDhcp: false,
+      ipAddress: '192.168.1.254',
+      subnetMask: '255.255.255.0',
+      defaultGateway: '192.168.1.1',
+    },
+  ];
+  thetaClientNative.listAccessPoints = jest.fn().mockResolvedValue(accessPoint);
 
-  thetaClient.listAccessPoints = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      return [
-        {
-          ssid,
-          ssidStealth,
-          authMode,
-          connectionPriority,
-          usingDhcp,
-          ipAddress,
-          subnetMask,
-          defaultGateway,
-        },
-      ];
-    })
-  );
-
-  const res = await listAccessPoints();
-  expect(thetaClient.listAccessPoints).toBeCalled();
-  expect(res?.[0]?.ssid).toBe(ssid);
-  expect(res?.[0]?.ssidStealth).toBe(ssidStealth);
-  expect(res?.[0]?.authMode).toBe(authMode);
-  expect(res?.[0]?.connectionPriority).toBe(connectionPriority);
-  expect(res?.[0]?.usingDhcp).toBe(usingDhcp);
-  expect(res?.[0]?.ipAddress).toBe(ipAddress);
-  expect(res?.[0]?.subnetMask).toBe(subnetMask);
-  expect(res?.[0]?.defaultGateway).toBe(defaultGateway);
+  const res = await ThetaClient.listAccessPoints();
+  expect(thetaClientNative.listAccessPoints).toBeCalled();
+  expect(res[0]!.ssid).toBe(accessPoint[0]!.ssid);
+  expect(res[0]!.ssidStealth).toBe(accessPoint[0]!.ssidStealth);
+  expect(res[0]!.authMode).toBe(accessPoint[0]!.authMode);
+  expect(res[0]!.connectionPriority).toBe(accessPoint[0]!.connectionPriority);
+  expect(res[0]!.usingDhcp).toBe(accessPoint[0]!.usingDhcp);
+  expect(res[0]!.ipAddress).toBe(accessPoint[0]!.ipAddress);
+  expect(res[0]!.subnetMask).toBe(accessPoint[0]!.subnetMask);
+  expect(res[0]!.defaultGateway).toBe(accessPoint[0]!.defaultGateway);
 });
 
 test('Exception for call listAccessPoints', async () => {
-  thetaClient.listAccessPoints = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      throw 'error';
-    })
-  );
+  thetaClientNative.listAccessPoints = jest.fn(async () => {
+    throw 'error';
+  });
+
   try {
-    await listAccessPoints();
+    await ThetaClient.listAccessPoints();
     throw new Error('failed');
   } catch (error) {
     expect(error).toBe('error');
   }
-  expect(thetaClient.listAccessPoints).toBeCalled();
+  expect(thetaClientNative.listAccessPoints).toBeCalled();
 });
 
 test('Call setAccessPointDynamically normal', async () => {
   const ssid = 'Test-Access-Point';
   const ssidStealth = true;
-  const authMode = AuthModeEnum.WEP;
+  const authMode = ThetaClient.AuthModeEnum.WEP;
   const password = 'password';
   const connectionPriority = 1;
-  thetaClient.setAccessPointDynamically = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      return true;
-    })
-  );
+  thetaClientNative.setAccessPointDynamically = jest
+    .fn()
+    .mockResolvedValue(true);
 
-  const res = await setAccessPointDynamically(
+  const res = await ThetaClient.setAccessPointDynamically(
     ssid,
     ssidStealth,
     authMode,
     password,
     connectionPriority
   );
-  expect(thetaClient.setAccessPointDynamically).toHaveBeenCalledWith(
+  expect(thetaClientNative.setAccessPointDynamically).toHaveBeenCalledWith(
     ssid,
     ssidStealth,
     authMode,
@@ -1287,17 +1002,15 @@ test('Call setAccessPointDynamically normal', async () => {
 test('Exception for call setAccessPointDynamically', async () => {
   const ssid = 'Test-Access-Point';
   const ssidStealth = true;
-  const authMode = AuthModeEnum.WEP;
+  const authMode = ThetaClient.AuthModeEnum.WEP;
   const password = 'password';
   const connectionPriority = 1;
-  thetaClient.setAccessPointDynamically = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      throw 'error';
-    })
-  );
+  thetaClientNative.setAccessPointDynamically = jest.fn(async () => {
+    throw 'error';
+  });
 
   try {
-    await setAccessPointDynamically(
+    await ThetaClient.setAccessPointDynamically(
       ssid,
       ssidStealth,
       authMode,
@@ -1308,7 +1021,7 @@ test('Exception for call setAccessPointDynamically', async () => {
   } catch (error) {
     expect(error).toBe('error');
   }
-  expect(thetaClient.setAccessPointDynamically).toHaveBeenCalledWith(
+  expect(thetaClientNative.setAccessPointDynamically).toHaveBeenCalledWith(
     ssid,
     ssidStealth,
     authMode,
@@ -1320,19 +1033,17 @@ test('Exception for call setAccessPointDynamically', async () => {
 test('Call setAccessPointStatically normal', async () => {
   const ssid = 'Test-Access-Point';
   const ssidStealth = true;
-  const authMode = AuthModeEnum.WEP;
+  const authMode = ThetaClient.AuthModeEnum.WEP;
   const password = 'password';
   const connectionPriority = 1;
   const ipAddress = '192.168.1.254';
   const subnetMask = '255.255.255.0';
   const defaultGateway = '192.168.1.1';
-  thetaClient.setAccessPointStatically = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      return true;
-    })
-  );
+  thetaClientNative.setAccessPointStatically = jest
+    .fn()
+    .mockResolvedValue(true);
 
-  const res = await setAccessPointStatically(
+  const res = await ThetaClient.setAccessPointStatically(
     ssid,
     ssidStealth,
     authMode,
@@ -1342,7 +1053,7 @@ test('Call setAccessPointStatically normal', async () => {
     subnetMask,
     defaultGateway
   );
-  expect(thetaClient.setAccessPointStatically).toHaveBeenCalledWith(
+  expect(thetaClientNative.setAccessPointStatically).toHaveBeenCalledWith(
     ssid,
     ssidStealth,
     authMode,
@@ -1358,20 +1069,18 @@ test('Call setAccessPointStatically normal', async () => {
 test('Exception call for setAccessPointStatically', async () => {
   const ssid = 'Test-Access-Point';
   const ssidStealth = true;
-  const authMode = AuthModeEnum.WEP;
+  const authMode = ThetaClient.AuthModeEnum.WEP;
   const password = 'password';
   const connectionPriority = 1;
   const ipAddress = '192.168.1.254';
   const subnetMask = '255.255.255.0';
   const defaultGateway = '192.168.1.1';
-  thetaClient.setAccessPointStatically = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      throw 'error';
-    })
-  );
+  thetaClientNative.setAccessPointStatically = jest.fn(async () => {
+    throw 'error';
+  });
 
   try {
-    await setAccessPointStatically(
+    await ThetaClient.setAccessPointStatically(
       ssid,
       ssidStealth,
       authMode,
@@ -1385,7 +1094,7 @@ test('Exception call for setAccessPointStatically', async () => {
   } catch (error) {
     expect(error).toBe('error');
   }
-  expect(thetaClient.setAccessPointStatically).toHaveBeenCalledWith(
+  expect(thetaClientNative.setAccessPointStatically).toHaveBeenCalledWith(
     ssid,
     ssidStealth,
     authMode,
@@ -1399,30 +1108,24 @@ test('Exception call for setAccessPointStatically', async () => {
 
 test('Call deleteAccessPoint normal', async () => {
   const ssid = 'Test-Access-Point';
-  thetaClient.deleteAccessPoint = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      return true;
-    })
-  );
+  thetaClientNative.deleteAccessPoint = jest.fn().mockResolvedValue(true);
 
-  const res = await deleteAccessPoint(ssid);
-  expect(thetaClient.deleteAccessPoint).toHaveBeenCalledWith(ssid);
+  const res = await ThetaClient.deleteAccessPoint(ssid);
+  expect(thetaClientNative.deleteAccessPoint).toHaveBeenCalledWith(ssid);
   expect(res).toBe(true);
 });
 
 test('Exception call for deleteAccessPoint', async () => {
   const ssid = 'Test-Access-Point';
-  thetaClient.deleteAccessPoint = jest.fn().mockImplementation(
-    jest.fn(async () => {
-      throw 'error';
-    })
-  );
+  thetaClientNative.deleteAccessPoint = jest.fn(async () => {
+    throw 'error';
+  });
 
   try {
-    await deleteAccessPoint(ssid);
+    await ThetaClient.deleteAccessPoint(ssid);
     throw new Error('failed');
   } catch (error) {
     expect(error).toBe('error');
   }
-  expect(thetaClient.deleteAccessPoint).toHaveBeenCalledWith(ssid);
+  expect(thetaClientNative.deleteAccessPoint).toHaveBeenCalledWith(ssid);
 });
